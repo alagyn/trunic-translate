@@ -119,7 +119,8 @@ class State:
             dl = im.GetWindowDrawList()
             wPos = im.GetWindowPos()
             wSize = im.GetWindowSize()
-            pos = im.Vec2(wPos.x + 10, wPos.y + 25)
+            yScroll = im.GetScrollY()
+            pos = im.Vec2(wPos.x + 10, wPos.y + 25 - yScroll)
 
             for wIdx, word in enumerate(self.words):
                 if pos.x + len(word.glyphs) * GLYPH_TOTAL_X > wPos.x + wSize.x:
