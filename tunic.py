@@ -108,9 +108,12 @@ class State:
                                EDITOR_SCALE, selectedGlyph.dot, 10):
                     selectedGlyph.dot = not selectedGlyph.dot
                     selectedGlyph.invalidate()
+                    self.wordDB.getWord(selectedWord)
                 im.EndTable()
 
         im.End()
+
+        text = []
 
         if im.Begin("Data"):
             dl = im.GetWindowDrawList()
@@ -122,6 +125,11 @@ class State:
                 if pos.x + len(word.glyphs) * GLYPH_TOTAL_X > wPos.x + wSize.x:
                     pos.x = wPos.x + 10
                     pos.y += GLYPH_TOTAL_Y + 10
+                    text.append("\n")
+                if len(word.value) == 0:
+                    text.append(word.getSoundStr())
+                else:
+                    text.append(word.value.copy())
                 for gIdx, g in enumerate(word.glyphs):
                     im.SetCursorScreenPos(pos)
                     selected = wIdx == self.selectedWordIdx and gIdx == self.selectedGlyphIdx
@@ -143,12 +151,6 @@ class State:
                 self.wordDB.storeWord(selectedWord)
             if im.IsItemFocused():
                 preventInput = True
-            text = []
-            for w in self.words:
-                if len(w.value) == 0:
-                    text.append(w.getSoundStr())
-                else:
-                    text.append(w.value.copy())
             im.Text(" ".join(text))
         im.End()
 
@@ -162,6 +164,7 @@ class State:
                     selectedWord.glyphs.pop(self.selectedGlyphIdx)
                     if self.selectedGlyphIdx > 0:
                         self.selectedGlyphIdx -= 1
+                        self.wordDB.getWord(selectedWord)
                 elif len(self.words) > 1:
                     self.words.pop(self.selectedWordIdx)
                     if self.selectedWordIdx > 0:
