@@ -127,7 +127,7 @@ class State:
             for wIdx, word in enumerate(self.words):
                 if pos.x + len(word.glyphs) * GLYPH_TOTAL_X > wPos.x + wSize.x:
                     pos.x = wPos.x + 10
-                    pos.y += GLYPH_TOTAL_Y + 10
+                    pos.y += GLYPH_TOTAL_Y + 15
                     text.append("\n")
                 if len(word.value) == 0:
                     text.append(word.getSoundStr())
@@ -148,6 +148,8 @@ class State:
         im.End()
 
         insert = False
+        preventInput = False
+
         if im.Begin("Lookup"):
             dl = im.GetWindowDrawList()
             if im.InputText("Lookup", self.lookupText):
@@ -156,16 +158,12 @@ class State:
                         self.lookupText.copy())
                 else:
                     self.lookupWord = None
+            if im.IsItemFocused():
+                preventInput = True
             if im.IsItemDeactivated() and im.IsKeyPressed(im.ImKey.Enter):
                 insert = True
+                im.SetKeyboardFocusHere(-1)
 
-            if self.lookupWord is not None:
-                pos = im.GetCursorPos()
-                for gIdx, g in enumerate(self.lookupWord.glyphs):
-                    im.SetCursorPos(pos)
-                    glyphButton(f"select{wIdx},{gIdx}", g, dl,
-                                self.wordLine.val, 1.0, False)
-                    pos.x += GLYPH_TOTAL_X
             im.BeginDisabled(self.lookupWord is None)
             if im.Button("Insert") or insert:
                 temp = self.words[self.selectedWordIdx]
@@ -179,12 +177,19 @@ class State:
                 self.selectedGlyphIdx = 0
                 self.lookupText.set("")
                 self.lookupWord = None
-
             im.EndDisabled()
 
-        preventInput = False
+            if self.lookupWord is not None:
+                im.Text(self.lookupWord.getSoundStr())
+                pos = im.GetCursorPos()
+                for gIdx, g in enumerate(self.lookupWord.glyphs):
+                    im.SetCursorPos(pos)
+                    glyphButton(f"select{wIdx},{gIdx}", g, dl,
+                                self.wordLine.val, 1.0, False)
+                    pos.x += GLYPH_TOTAL_X
 
         if im.Begin("Translation"):
+            im.Text(selectedWord.getSoundStr())
             if im.InputText("Trans", selectedWord.value):
                 self.wordDB.storeWord(selectedWord)
             if im.IsItemFocused():
