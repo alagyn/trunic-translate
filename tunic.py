@@ -155,6 +155,11 @@ class State:
             im.Text(" ".join(text))
         im.End()
 
+        if im.IsKeyPressed(im.ImKey.Enter):
+            self.words.insert(self.selectedWordIdx + 1, Word(Glyph()))
+            self.selectedWordIdx += 1
+            self.selectedGlyphIdx = 0
+
         if not preventInput:
             if im.IsKeyPressed(im.ImKey.Space):
                 selectedWord.glyphs.insert(self.selectedGlyphIdx + 1, Glyph())
@@ -179,11 +184,6 @@ class State:
                     g.dot = False
                     self.words[0].value.set("")
                     g.invalidate()
-
-            elif im.IsKeyPressed(im.ImKey.Enter):
-                self.words.insert(self.selectedWordIdx + 1, Word(Glyph()))
-                self.selectedWordIdx += 1
-                self.selectedGlyphIdx = 0
             elif im.IsKeyPressed(im.ImKey.RightArrow):
                 if self.selectedGlyphIdx + 1 < len(
                         self.words[self.selectedWordIdx].glyphs):
