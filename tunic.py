@@ -50,6 +50,8 @@ class State:
 
         self.selectedWordIdx = 0
         self.selectedGlyphIdx = 0
+        self.lookupText = im.StrRef(124)
+        self.lookupWord: Word | None = None
         self.wordDB = WordDB()
 
     def render(self) -> bool:
@@ -145,6 +147,35 @@ class State:
 
         im.End()
 
+        if im.Begin("Lookup"):
+            dl = im.GetWindowDrawList()
+            if im.InputText("Lookup", self.lookupText):
+                if len(self.lookupText.copy().strip()) > 0:
+                    self.lookupWord = self.wordDB.lookupWord(
+                        self.lookupText.copy())
+                else:
+                    self.lookupWord = None
+            if self.lookupWord is not None:
+                pos = im.GetCursorPos()
+                for gIdx, g in enumerate(self.lookupWord.glyphs):
+                    im.SetCursorPos(pos)
+                    glyphButton(f"select{wIdx},{gIdx}", g, dl,
+                                self.wordLine.val, 1.0, False)
+                    pos.x += GLYPH_TOTAL_X
+            im.BeginDisabled(self.lookupWord is None)
+            if im.Button("Insert"):
+                temp = self.words[self.selectedWordIdx]
+                if len(temp.glyphs) > 1 or not temp.glyphs[0].isEmpty():
+                    self.words.insert(self.selectedWordIdx + 1,
+                                      self.lookupWord.copy())
+                else:
+                    self.words[self.selectedWordIdx] = self.lookupWord.copy()
+                    self.words.append(Word(Glyph()))
+                self.selectedWordIdx += 1
+                self.selectedGlyphIdx = 0
+
+            im.EndDisabled()
+
         preventInput = False
 
         if im.Begin("Translation"):
@@ -152,6 +183,7 @@ class State:
                 self.wordDB.storeWord(selectedWord)
             if im.IsItemFocused():
                 preventInput = True
+
             im.Text(" ".join(text))
         im.End()
 

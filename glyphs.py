@@ -282,6 +282,9 @@ GLYPH_THICK = 3
 
 GLYPH_DOT_RAD = 5
 
+SOUND_DELIM = "`"
+CHAR_DELIM = "|"
+
 
 class Glyph:
 
@@ -294,6 +297,9 @@ class Glyph:
         self.dot = dot
 
         self._parts: List[GlyphParts] | None = None
+
+    def copy(self) -> 'Glyph':
+        return Glyph(self.cons, self.vowel, self.dot)
 
     def invalidate(self):
         self._parts = None
@@ -396,19 +402,30 @@ class Glyph:
 
             dl.AddLine(v1, v2, GLYPH_COL, GLYPH_THICK * scale)
 
+    def _getConsSound(self) -> str:
+        if self.cons == Cons.TH_HARD:
+            return "TH(hard)"
+        elif self.cons == Cons.TH_SOFT:
+            return "TH(soft)"
+        else:
+            return self.cons.name
+
     def getSoundStr(self) -> str:
         out = []
         if self.dot:
             if self.vowel:
                 out.append(self.vowel.name)
             if self.cons:
-                out.append(self.cons.name)
+                out.append(self._getConsSound())
         else:
             if self.cons:
-                out.append(self.cons.name)
+                out.append(self._getConsSound())
             if self.vowel:
                 out.append(self.vowel.name)
-        return "".join(out)
+        return SOUND_DELIM.join(out)
+
+    def isEmpty(self) -> bool:
+        return self.cons is None and self.vowel is None and not self.dot
 
 
 class Word:
@@ -422,4 +439,47 @@ class Word:
         for g in self.glyphs:
             out.append(g.getSoundStr())
 
-        return "|".join(out)
+        return CHAR_DELIM.join(out)
+
+    def copy(self) -> 'Word':
+        c = Word(*[g.copy() for g in self.glyphs])
+        c.value.set(self.value.copy())
+        return c
+
+
+def _lookupCons(text: str) -> Cons:
+    if text.startswith("TH(hard)"):
+        return Cons.TH_HARD
+    elif text.startswith("TH(soft)"):
+        return Cons.TH_SOFT
+    else:
+        return Cons[text]
+
+
+def glyphFromStr(soundStr: str) -> Glyph:
+    dot = False
+    parts = soundStr.split(SOUND_DELIM)
+
+    if len(parts) == 1:
+        part = parts[0]
+        if part.startswith(tuple("AEIOU")):
+            vowel = Vowel[part]
+            cons = None
+        else:
+            vowel = None
+            cons = _lookupCons(part)
+    else:
+        part1, part2 = parts
+        if part1.startswith(tuple("AEIOU")):
+            dot = True
+            vowel = Vowel[part1]
+            cons = _lookupCons(part2)
+        else:
+            vowel = Vowel[part2]
+            cons = _lookupCons(part1)
+
+    return Glyph(cons, vowel, dot)
+
+
+def wordFromStr(soundStr: str) -> Word:
+    return Word(*[glyphFromStr(x) for x in soundStr.split(CHAR_DELIM)])

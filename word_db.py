@@ -1,7 +1,7 @@
 import os
 import sqlite3
 
-from glyphs import Word
+from glyphs import Word, wordFromStr
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS words
@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS words
 GET_WORD = "SELECT value FROM words WHERE sounds = ?"
 STORE_WORD = "INSERT INTO words VALUES (:sounds, :value) ON CONFLICT DO UPDATE SET value = :value"
 REM_WORD = "DELETE FROM words WHERE sounds = ?"
+LOOKUP_WORD = "SELECT sounds FROM words WHERE value = ?"
 
 
 class WordDB:
@@ -32,7 +33,6 @@ class WordDB:
         else:
             soundStr = word.getSoundStr()
             value = word.value.copy()
-            print(f"storing {soundStr} = {value}")
             self.cur.execute(STORE_WORD, {"sounds": soundStr, "value": value})
 
         self.con.commit()
@@ -40,11 +40,19 @@ class WordDB:
     def getWord(self, word: Word):
         soundStr = word.getSoundStr()
         res = self.cur.execute(GET_WORD, (soundStr, ))
-        print(f"Getting {soundStr}")
         value = res.fetchone()
         if value is not None:
-            print("    Found", value)
             word.value.set(value[0])
         else:
             word.value.set("")
-            print("    Not found")
+
+    def lookupWord(self, text: str) -> Word | None:
+        res = self.cur.execute(LOOKUP_WORD, (text, ))
+        value = res.fetchone()
+        if value is None:
+            return None
+
+        word = wordFromStr(value[0])
+        word.value.set(text)
+
+        return word
