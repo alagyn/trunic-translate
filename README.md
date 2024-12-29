@@ -16,6 +16,7 @@ Legend:
 2. Selected character/word
 3. Selected word translation
 4. Full translated text
-5. Character select
+5. Translated word lookup (press enter to insert)
+6. Character editor
 
 Translated words are stored in a local sqlite db.

@@ -127,7 +127,7 @@ class State:
             for wIdx, word in enumerate(self.words):
                 if pos.x + len(word.glyphs) * GLYPH_TOTAL_X > wPos.x + wSize.x:
                     pos.x = wPos.x + 10
-                    pos.y += GLYPH_TOTAL_Y + 15
+                    pos.y += GLYPH_TOTAL_Y + 20
                     text.append("\n")
                 if len(word.value) == 0:
                     text.append(word.getSoundStr())
