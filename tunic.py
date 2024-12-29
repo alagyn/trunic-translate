@@ -147,6 +147,7 @@ class State:
 
         im.End()
 
+        insert = False
         if im.Begin("Lookup"):
             dl = im.GetWindowDrawList()
             if im.InputText("Lookup", self.lookupText):
@@ -155,6 +156,9 @@ class State:
                         self.lookupText.copy())
                 else:
                     self.lookupWord = None
+            if im.IsItemDeactivated() and im.IsKeyPressed(im.ImKey.Enter):
+                insert = True
+
             if self.lookupWord is not None:
                 pos = im.GetCursorPos()
                 for gIdx, g in enumerate(self.lookupWord.glyphs):
@@ -163,7 +167,7 @@ class State:
                                 self.wordLine.val, 1.0, False)
                     pos.x += GLYPH_TOTAL_X
             im.BeginDisabled(self.lookupWord is None)
-            if im.Button("Insert"):
+            if im.Button("Insert") or insert:
                 temp = self.words[self.selectedWordIdx]
                 if len(temp.glyphs) > 1 or not temp.glyphs[0].isEmpty():
                     self.words.insert(self.selectedWordIdx + 1,
@@ -173,6 +177,8 @@ class State:
                     self.words.append(Word(Glyph()))
                 self.selectedWordIdx += 1
                 self.selectedGlyphIdx = 0
+                self.lookupText.set("")
+                self.lookupWord = None
 
             im.EndDisabled()
 
@@ -187,7 +193,7 @@ class State:
             im.Text(" ".join(text))
         im.End()
 
-        if im.IsKeyPressed(im.ImKey.Enter):
+        if im.IsKeyPressed(im.ImKey.Enter) and not insert:
             self.words.insert(self.selectedWordIdx + 1, Word(Glyph()))
             self.selectedWordIdx += 1
             self.selectedGlyphIdx = 0
