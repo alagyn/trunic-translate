@@ -80,7 +80,11 @@ class State:
                     hl = selectedGlyph.cons == con
                     if glyphButton(f"add{con.name}", Glyph(con), wl,
                                    self.wordLine.val, EDITOR_SCALE, hl, 10):
-                        selectedGlyph.cons = con
+                        if selectedGlyph.cons == con:
+                            selectedGlyph.cons = None
+                        else:
+                            selectedGlyph.cons = con
+
                         selectedGlyph.invalidate()
                         self.wordDB.getWord(selectedWord)
 
@@ -99,7 +103,11 @@ class State:
                     hl = selectedGlyph.vowel == vow
                     if glyphButton(f"add{vow.name}", Glyph(None, vow), wl,
                                    self.wordLine.val, EDITOR_SCALE, hl, 10):
-                        selectedGlyph.vowel = vow
+                        if selectedGlyph.vowel == vow:
+                            selectedGlyph.vowel = None
+                        else:
+                            selectedGlyph.vowel = vow
+
                         selectedGlyph.invalidate()
                         self.wordDB.getWord(selectedWord)
 
